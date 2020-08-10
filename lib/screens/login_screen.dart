@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,8 @@ import 'package:flutter_signin_button/button_list.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:apple_sign_in/apple_sign_in.dart';
+import 'package:login_module_flutter/screens/my_profile_screen.dart';
+import 'package:login_module_flutter/screens/signup_email_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -21,7 +24,7 @@ class LoginScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: FlutterLogo(
-                size: 150,
+                size: 180,
               ),
             ),
             SignInButton(
@@ -38,6 +41,18 @@ class LoginScreen extends StatelessWidget {
                   AuthResult authResult =
                       await auth.signInWithCredential(credential);
                   FirebaseUser user = authResult.user;
+//                  Navigator.pushNamedAndRemoveUntil(
+//                      context,
+//                      MaterialPageRoute(
+//                          builder: (BuildContext context) =>
+//                              MyProfileScreen(user: user, platform: 'gogole')),
+//                      (route) => false);
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              MyProfileScreen(user: user, platform: 'google')),
+                      (route) => false);
                 } catch (e) {
                   print('err: $e');
                 }
@@ -51,6 +66,9 @@ class LoginScreen extends StatelessWidget {
                         AuthorizationRequest authorizationRequest =
                             AppleIdRequest(
                                 requestedScopes: [Scope.email, Scope.fullName]);
+                        print(authorizationRequest.requestedScopes[0].value);
+                        print(authorizationRequest.requestedScopes[1].value
+                            .toString());
                         AuthorizationResult authorizationResult =
                             await AppleSignIn.performRequests(
                                 [authorizationRequest]);
@@ -64,10 +82,20 @@ class LoginScreen extends StatelessWidget {
                           accessToken: String.fromCharCodes(
                               appleCredential.authorizationCode),
                         );
+                        print(String.fromCharCodes(
+                            appleCredential.identityToken));
                         FirebaseAuth auth = FirebaseAuth.instance;
-                        AuthResult authResult = await auth
-                            .signInWithCredential(credential); // 인증에 성공한 유저 정보
+                        AuthResult authResult = await auth.signInWithCredential(
+                            credential); //// 인증에 성공한 유저 정보
+                        print(
+                            '===user===\n${authResult.user.displayName}\n${authResult.user.email}\n${authResult.user.photoUrl}\n${authResult.user.phoneNumber}\n${authResult.user.isAnonymous}\n${authResult.user.isEmailVerified}');
                         FirebaseUser user = authResult.user;
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => MyProfileScreen(
+                                    user: user, platform: 'apple')),
+                            (route) => false);
                       } catch (e) {
                         print('err: $e');
                       }
@@ -76,7 +104,10 @@ class LoginScreen extends StatelessWidget {
                 : Container(),
             SignInButton(
               Buttons.Email,
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => SignUpScreen()));
+              },
             )
           ],
         ),
